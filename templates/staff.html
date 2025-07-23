@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QMS Staff Panel</title>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <style>
+        body { font-family: "Segoe UI", sans-serif; background-color: #f4f6f8; color: #333; padding: 10px; max-width: 600px; margin: auto; }
+        h1 { font-size: 1.5rem; color: #2980b9; text-align: center; }
+        form { display: flex; flex-direction: column; gap: 20px; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        label { font-weight: 600; margin-bottom: 5px; transition: color 0.3s ease; }
+        input[type="text"], select { font-size: 1.2rem; padding: 10px; border-radius: 6px; border: 1px solid #ccc; width: 100%; }
+        button { padding: 15px; font-size: 1.2rem; background-color: #2980b9; color: white; border: none; border-radius: 6px; cursor: pointer; transition: background-color 0.3s ease; }
+        button:hover { background-color: #1f5d8f; }
+        button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+        .status { margin-top: 15px; font-weight: bold; text-align: center; height: 20px; }
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; justify-content: center; margin-top: 20px; }
+        .key { background-color: #ecf0f1; border: 2px solid #bdc3c7; border-radius: 10px; font-size: 2rem; text-align: center; line-height: 70px; cursor: pointer; user-select: none; transition: background 0.2s; }
+        .key:hover { background-color: #d0d7de; }
+        .key:active { background-color: #95a5a6; color: white; }
+    </style>
+</head>
+<body>
+    <h1>QMS Staff Panel</h1>
+
+    <form id="call-form">
+        <div style="text-align: center;">
+            <label for="number-input" style="font-size: 1.5rem;">Nombor Tiket</label><br>
+            <input type="text" id="number-input" maxlength="5" autocomplete="off" readonly style="font-size: 2rem; text-align: center; width: 200px; margin-top: 10px;" />
+        </div>
+
+        <div class="keypad">
+            <div class="key" data-key="1">1</div><div class="key" data-key="2">2</div><div class="key" data-key="3">3</div>
+            <div class="key" data-key="4">4</div><div class="key" data-key="5">5</div><div class="key" data-key="6">6</div>
+            <div class="key" data-key="7">7</div><div class="key" data-key="8">8</div><div class="key" data-key="9">9</div>
+            <div class="key" data-key="clear">C</div><div class="key" data-key="0">0</div><div class="key" data-key="back">&larr;</div>
+        </div>
+        
+        <div>
+            <label for="counter-select">Pilih Kaunter</label>
+            <select id="counter-select" aria-label="Pilih Kaunter" required>
+                <option value="1">Kaunter 1</option><option value="2">Kaunter 2</option><option value="3">Kaunter 3</option><option value="4">Kaunter 4</option><option value="5">Kaunter 5</option>
+            </select>
+        </div>
+
+        <button type="submit" id="submit-button">Panggil Sekarang</button>
+    </form>
+
+    <div class="status" id="status-message"></div>
+
+<script>
+    const socket = io();
+    const form = document.getElementById("call-form");
+    const numberInput = document.getElementById("number-input");
+    const counterSelect = document.getElementById("counter-select");
+    const statusMessage = document.getElementById("status-message");
+    const submitButton = document.getElementById("submit-button");
+    let plusKeyActive = false; // For the counter change hotkey
+
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const number = numberInput.value.trim();
+        const counter = counterSelect.value;
+
+        if (number && !isNaN(number)) {
+            socket.emit("call_number", { number, counter });
+            
+            statusMessage.textContent = `Called number ${number} to Counter ${counter}`;
+            statusMessage.style.color = "green";
+            numberInput.value = ""; // Clear input for next call
+
+            submitButton.disabled = true;
+            setTimeout(() => { 
+                statusMessage.textContent = "";
+                submitButton.disabled = false; 
+            }, 1500);
+
+        } else {
+            statusMessage.textContent = "Please enter a valid number.";
+            statusMessage.style.color = "red";
+        }
+    });
+
+    // Virtual Keypad function  
+    document.querySelectorAll(".key").forEach(key => {
+        key.addEventListener("click", () => {
+            const keyVal = key.dataset.key;
+            if (keyVal === "clear") {
+                numberInput.value = "";
+            } else if (keyVal === "back") {
+                numberInput.value = numberInput.value.slice(0, -1);
+            } else if (numberInput.value.length < 5) {
+                numberInput.value += keyVal;
+            }
+        });
+    });
+
+    // Advanced Keyboard shortcuts with counter-switching hotkey
+    document.addEventListener("keydown", function(event) {
+        const isNumpadPlus = event.code === "NumpadAdd" || event.key === '+';
+        const isCounterKey = /^[1-5]$/.test(event.key); // For counters 1-5
+
+        // Hotkey: Press '+' then a number 1-5 to switch the counter
+        if (isNumpadPlus) {
+            plusKeyActive = true;
+            event.preventDefault(); // Prevent '+' from being typed
+            const label = document.querySelector("label[for='counter-select']");
+            label.style.color = "#e67e22"; // Orange to show hotkey is active
+            setTimeout(() => { if (plusKeyActive) label.style.color = ""; }, 1000); // Reset color
+        } 
+        else if (plusKeyActive && isCounterKey) {
+            event.preventDefault(); // Prevent digit from being typed in the number field
+            counterSelect.value = event.key;
+            plusKeyActive = false; // Exit hotkey mode
+            
+            const label = document.querySelector("label[for='counter-select']");
+            label.style.color = "green"; // Green to confirm change
+            setTimeout(() => { label.style.color = ""; }, 500);
+        }
+        // Normal number input
+        else if (event.key >= '0' && event.key <= '9' && numberInput.value.length < 5) {
+            numberInput.value += event.key;
+            plusKeyActive = false;
+        } 
+        // Backspace
+        else if (event.key === "Backspace") {
+            numberInput.value = numberInput.value.slice(0, -1);
+            plusKeyActive = false;
+        } 
+        // Enter key submits the form
+        else if (event.key === "Enter") {
+            event.preventDefault();
+            if (!submitButton.disabled) {
+                submitButton.click();
+            }
+            plusKeyActive = false;
+        }
+        // Any other key resets the hotkey mode
+        else {
+            if (!event.metaKey && !event.ctrlKey) {
+                plusKeyActive = false;
+            }
+        }
+    });
+
+    socket.on("connect", () => { console.log("Connected to server"); });
+</script>
+</body>
+</html>

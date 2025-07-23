@@ -1,0 +1,42 @@
+to-do list
+- empty
+
+Version 2.4 (20250718)
+- fixed  script when launching application
+- fixed bug for Virtual Keypad function
+- added more media videos
+
+
+Version 2.3.1 (20250703)
+- compiled AutoHotKey (AHK) script to allow single click operation;
+- just click "QMS-OPD v2.3.1.exe" to automatically: Start server,  open display in fullscreen, & open qms panel-
+- quick counter change with numpad shortcut ('butang tambah +' + number 1-5) (sesuai utk numpad sahaja)
+- can add more videos (KUA,  MyUbat,  etc) autodetect in folder static/media/ (in *.mp4 format only)
+- added optional hardware performance mod (perf.bat)
+
+link = https://drive.google.com/file/d/1l9u38ysT-wSGFueQjtPW3eByIyEs_kVf/view?usp=drive_link
+
+Version 2.3 (20250630)
+- added 5 digit support (can use 1-5 digit,  removed 4 digit-restriction)
+- added audio-queue support (can spam the call button,  audio will not overlap and play by sequential)
+- added simple-animation upon calling number on display
+- reset element focus when calling number
+- optimized video & audio file size
+
+Changelog v2.2.1 (20250618)
+- changed doorbell sound to differentiate from pintu opd
+- added header title & scrolling text at bottom (editable in display.html)
+- added click anywhere to start in display instead of small button (user must 'click' first to allow audio playback)
+- added batch script to open display in fullscreen in another display
+
+Version v2.2 (20250618)
+- changed doorbell sound to differentiate from pintu opd
+- added header title & scrolling text at bottom (editable in display.html)
+- tu je, any bug report can pm tepi
+
+Version v2.1 (20250612)
+- fixed bug - type number anywhere on page & press enter to call - no need to focus on text box
+- added bell chime upon calling number
+- updated ip config to use 0.0.0.0 (use http://localhost:5000 and http://localhost:5000/display) (network feature disabled)
+- added shortcut to start server, open panel, display
+- any feature request are welcomed
