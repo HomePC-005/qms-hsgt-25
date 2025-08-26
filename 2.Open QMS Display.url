@@ -2,5 +2,6 @@
 Prop3=19,2
 [InternetShortcut]
 IDList=
-URL=http://localhost:5000/display
+URL=http://10.78.115.21:5000/display
 HotKey=0
+
