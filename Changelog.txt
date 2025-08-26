@@ -1,5 +1,18 @@
 to-do list
-- empty
+- log every number called with timestamp with persistent storage
+- not priority: collect number start time with admin dashboard
+
+
+Version 2.6 (20250822)
+- Reworked Keypad to better support touch
+- Added Recent Call in staff panel
+- Added QR code for easy mobile link
+- Added wakelock function to prevent device sleep (Android Device)
+- Added floating notification status message
+
+Version 2.5 (20250821)
+- Added SocketIO status
+- Reworked code using Claude Sonnet
 
 Version 2.4 (20250718)
 - fixed  script when launching application
