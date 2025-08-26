@@ -293,6 +293,18 @@
             socket.connect();
         }
     });
+
+// Add this to your existing script section in display.html
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-click the start button after page loads
+    setTimeout(() => {
+        const startButton = document.getElementById('start-button');
+        if (startButton && startButton.style.display !== 'none') {
+            console.log('Auto-starting display...');
+            startButton.click();
+        }
+    }, 2000); // 2 second delay to ensure everything is loaded
+});
 </script>
 
 </body>
