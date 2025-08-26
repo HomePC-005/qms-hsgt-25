@@ -6,42 +6,535 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QMS Staff Panel</title>
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js" defer></script>
     <style>
-        body { font-family: "Segoe UI", sans-serif; background-color: #f4f6f8; color: #333; padding: 10px; max-width: 600px; margin: auto; }
-        h1 { font-size: 1.5rem; color: #2980b9; text-align: center; }
-        form { display: flex; flex-direction: column; gap: 20px; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        label { font-weight: 600; margin-bottom: 5px; transition: color 0.3s ease; }
-        input[type="text"], select { font-size: 1.2rem; padding: 10px; border-radius: 6px; border: 1px solid #ccc; width: 100%; }
-        button { padding: 15px; font-size: 1.2rem; background-color: #2980b9; color: white; border: none; border-radius: 6px; cursor: pointer; transition: background-color 0.3s ease; }
-        button:hover { background-color: #1f5d8f; }
-        button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
-        .status { margin-top: 15px; font-weight: bold; text-align: center; height: 20px; }
-        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; justify-content: center; margin-top: 20px; }
-        .key { background-color: #ecf0f1; border: 2px solid #bdc3c7; border-radius: 10px; font-size: 2rem; text-align: center; line-height: 70px; cursor: pointer; user-select: none; transition: background 0.2s; }
-        .key:hover { background-color: #d0d7de; }
-        .key:active { background-color: #95a5a6; color: white; }
+        body { 
+            font-family: "Inter", "Segoe UI", sans-serif; 
+            background: linear-gradient(0deg, #C33764, #020b57);
+            color: #2d3748; 
+            padding: 16px; 
+            max-width: 480px; 
+            margin: 0 auto; 
+            min-height: 100vh;
+        }
+        
+        h1 { 
+            font-size: 1.75rem; 
+            font-weight: 700;
+            color: #FFFFFF; 
+            text-align: center; 
+            margin-bottom: 24px;
+            letter-spacing: -0.025em;
+        }
+        
+        /* Connection Info Section */
+        .connection-info {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #4a5568;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .connection-info h3 {
+            margin: 0 0 12px 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .connection-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        .connection-text {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .connection-url {
+            font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+            background: rgba(237, 242, 247, 0.8);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            margin: 6px 0;
+            word-break: break-all;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        
+        .qr-container {
+            background: white;
+            padding: 12px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        #qrcode {
+            max-width: 120px;
+            height: auto;
+        }
+        
+        /* Recent Calls Section */
+        .recent-calls {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+        
+        .recent-calls h3 {
+            margin: 0 0 16px 0;
+            color: #2d3748;
+            font-size: 1.125rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .recent-calls-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .recent-call-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(247, 250, 252, 0.8);
+            border-radius: 12px;
+            border-left: 4px solid #4299e1;
+            transition: all 0.2s ease;
+        }
+        
+        .recent-call-item:hover {
+            background: rgba(237, 242, 247, 0.9);
+            transform: translateY(-1px);
+        }
+        
+        .recent-call-number {
+            font-weight: 700;
+            color: #2d3748;
+            font-size: 1.125rem;
+        }
+        
+        .recent-call-details {
+            font-size: 0.875rem;
+            color: #718096;
+            text-align: right;
+        }
+        
+        .recent-call-time {
+            display: block;
+            font-size: 0.75rem;
+            color: #a0aec0;
+        }
+        
+        .no-recent-calls {
+            text-align: center;
+            color: #a0aec0;
+            font-style: italic;
+            padding: 20px;
+        }
+        
+        /* Main Form */
+        form { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 24px; 
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 24px; 
+            border-radius: 20px; 
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); 
+        }
+        
+        label { 
+            font-weight: 600; 
+            margin-bottom: 8px; 
+            color: #2d3748;
+            font-size: 1.125rem;
+        }
+        
+        select { 
+            font-size: 1.125rem; 
+            padding: 14px 16px; 
+            border-radius: 12px; 
+            border: 2px solid #e2e8f0; 
+            width: 100%; 
+            background: white;
+            color: #2d3748;
+            transition: all 0.2s ease;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+        
+        button { 
+            padding: 16px 24px; 
+            font-size: 1.2rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+            box-shadow: 2px 3px 1px rgba(66, 153, 225, 0.3);
+        }
+        
+        button:hover { 
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(66, 153, 225, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled { 
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .status { 
+            margin-top: 16px; 
+            font-weight: 600; 
+            text-align: center; 
+            height: 24px;
+            font-size: 1rem;
+        }
+        
+/* --- Redesigned Virtual Keypad for Mobile Touch --- */
+.keypad-section {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.number-display {
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 20px;
+    margin: 10px 0;
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #2d3748;
+    text-align: center;
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.15em;
+    transition: all 0.2s ease;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+}
+
+.number-display.empty {
+    color: #a0aec0;
+    font-weight: 400;
+}
+
+.virtual-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 500px; /* optional: limit on big screens */
+  margin: 0 auto; /* center horizontally */
+
+}
+
+.key-btn {
+    background: linear-gradient(145deg, #ffffff, #f1f5f9);
+    border: 2px solid #e2e8f0;
+    color: #1a202c;
+    border-radius: 18px;
+    font-size: 1.8rem;
+    font-weight: 600;
+    aspect-ratio: 1.4 / 1; /* keeps square shape */
+    width: 100%;
+    height: auto;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.key-btn:hover {
+    background: linear-gradient(145deg, #f8fafc, #edf2f7);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+.key-btn:active {
+    transform: translateY(0) scale(0.97);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Special Keys */
+.key-btn.action-key {
+    background: linear-gradient(145deg, #fed7d7, #feb2b2);
+    border-color: #fc8181;
+    color: #742a2a;
+    font-weight: 700;
+}
+
+/* Enter/Call Key */
+.key-btn.enter-key {
+    background: linear-gradient(145deg, #68d391, #48bb78);
+    border-color: #38a169;
+    color: white;
+    font-weight: 700;
+    font-size: 1.6rem;
+}
+
+/* Ripple effect */
+.key-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(66, 153, 225, 0.25);
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+.key-btn:active::after {
+    width: 160px;
+    height: 160px;
+}
+
+        /* FLOATING NOTIFICATION SYSTEM - Updated Design */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            width: 90%;
+            max-width: 400px;
+            pointer-events: none; /* Allows clicks to pass through when not needed */
+        }
+
+        .notification {
+            display: none;
+            padding: 16px 20px;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-align: center;
+            margin-bottom: 12px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+            pointer-events: auto; /* Re-enable pointer events for the notification itself */
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Error notification styling */
+        .notification.error {
+            background: linear-gradient(135deg, rgba(254, 215, 215, 0.95), rgba(254, 178, 178, 0.95));
+            border-color: rgba(252, 129, 129, 0.3);
+            color: #742a2a;
+        }
+
+        /* Success notification styling */
+        .notification.success {
+            background: linear-gradient(135deg, rgba(198, 246, 213, 0.95), rgba(154, 230, 180, 0.95));
+            border-color: rgba(104, 211, 145, 0.3);
+            color: #22543d;
+        }
+
+        /* Info notification styling */
+        .notification.info {
+            background: linear-gradient(135deg, rgba(190, 227, 248, 0.95), rgba(147, 197, 253, 0.95));
+            border-color: rgba(59, 130, 246, 0.3);
+            color: #1e3a8a;
+        }
+
+        /* Animated entrance */
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideOutUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-100%);
+            }
+        }
+
+        .notification.show {
+            display: block;
+            animation: slideInDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .notification.hide {
+            animation: slideOutUp 0.3s ease-in-out forwards;
+        }
+
+        /* Progress bar for auto-dismiss */
+        .notification::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: currentColor;
+            opacity: 0.4;
+            width: 0%;
+            transition: width linear;
+        }
+
+        .notification.auto-dismiss::before {
+            animation: progressBar linear;
+        }
+
+        @keyframes progressBar {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+
+        /* Dismiss button */
+        .notification-dismiss {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            background: none;
+            border: none;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+            padding: 4px;
+            color: inherit;
+        }
+
+        .notification-dismiss:hover {
+            opacity: 1;
+        }
+        
+        /* Animation for new recent calls */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .recent-call-item.new {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        /* Ripple effect for keypad buttons */
+        .key-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(66, 153, 225, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.3s ease, height 0.3s ease;
+        }
+        
+        .key-btn:active::after {
+            width: 120px;
+            height: 120px;
+        }
     </style>
 </head>
 <body>
-    <h1>QMS Staff Panel</h1>
+    <h1>QMS OPD v2.6</h1>
+
+    <!-- FLOATING NOTIFICATION CONTAINER - Replaces the old error-container -->
+    <div class="notification-container">
+        <div id="notification" class="notification">
+            <button class="notification-dismiss" onclick="dismissNotification()">&times;</button>
+            <span id="notification-text"></span>
+        </div>
+    </div>
 
     <form id="call-form">
-        <div style="text-align: center;">
-            <label for="number-input" style="font-size: 1.5rem;">Nombor Tiket</label><br>
-            <input type="text" id="number-input" maxlength="5" autocomplete="off" readonly style="font-size: 2rem; text-align: center; width: 200px; margin-top: 10px;" />
-        </div>
-
-        <div class="keypad">
-            <div class="key" data-key="1">1</div><div class="key" data-key="2">2</div><div class="key" data-key="3">3</div>
-            <div class="key" data-key="4">4</div><div class="key" data-key="5">5</div><div class="key" data-key="6">6</div>
-            <div class="key" data-key="7">7</div><div class="key" data-key="8">8</div><div class="key" data-key="9">9</div>
-            <div class="key" data-key="clear">C</div><div class="key" data-key="0">0</div><div class="key" data-key="back">&larr;</div>
+        <!-- Virtual Keypad Input -->
+        <div class="keypad-section">
+            <label for="number-input-keypad">Nombor Tiket</label>
+            <div class="number-display" id="number-display">
+                <span id="display-text"> </span>
+            </div>
+            <input type="hidden" id="number-input-keypad" maxlength="5" />
+            
+            <div class="virtual-keypad">
+                <button type="button" class="key-btn number-key" data-key="1">1</button>
+                <button type="button" class="key-btn number-key" data-key="2">2</button>
+                <button type="button" class="key-btn number-key" data-key="3">3</button>
+                <button type="button" class="key-btn number-key" data-key="4">4</button>
+                <button type="button" class="key-btn number-key" data-key="5">5</button>
+                <button type="button" class="key-btn number-key" data-key="6">6</button>
+                <button type="button" class="key-btn number-key" data-key="7">7</button>
+                <button type="button" class="key-btn number-key" data-key="8">8</button>
+                <button type="button" class="key-btn number-key" data-key="9">9</button>
+                <button type="button" class="key-btn action-key" data-key="clear">C</button>
+                <button type="button" class="key-btn number-key" data-key="0">0</button>
+                <button type="button" class="key-btn enter-key" data-key="enter">✓</button>
+            </div>
         </div>
         
         <div>
             <label for="counter-select">Pilih Kaunter</label>
             <select id="counter-select" aria-label="Pilih Kaunter" required>
-                <option value="1">Kaunter 1</option><option value="2">Kaunter 2</option><option value="3">Kaunter 3</option><option value="4">Kaunter 4</option><option value="5">Kaunter 5</option>
+                <option value="1">Kaunter 1</option>
+                <option value="2">Kaunter 2</option>
+                <option value="3">Kaunter 3</option>
+                <option value="4">Kaunter 4</option>
+                <option value="5">Kaunter 5</option>
             </select>
         </div>
 
@@ -50,102 +543,521 @@
 
     <div class="status" id="status-message"></div>
 
+    <!-- Recent Calls from This Terminal -->
+    <div class="recent-calls">
+        <h3>🕒 Recent Calls (This Terminal)</h3>
+        <div class="recent-calls-list" id="recent-calls-list">
+            <div class="no-recent-calls">No recent calls yet</div>
+        </div>
+    </div>
+
+
+    <!-- Connection Information -->
+    <div class="connection-info">
+        <h3>📱 Mobile Access</h3>
+        <div class="connection-details">
+            <div class="connection-text">
+                <div>Server Address:</div>
+                <div class="connection-url" id="server-url">Loading...</div>
+                <div style="font-size: 0.875rem; margin-top: 8px; color: #718096;">Scan QR code to connect mobile devices</div>
+                <div style="font-size: 0.875rem; margin-top: 8px; color: #718096;">Use Wifi "Kualiti_Staf" PW "2024@KualitiHS"</div>
+            </div>
+            <div class="qr-container">
+                <canvas id="qrcode"></canvas>
+            </div>
+        </div>
+    </div>
+
+
 <script>
     const socket = io();
     const form = document.getElementById("call-form");
-    const numberInput = document.getElementById("number-input");
     const counterSelect = document.getElementById("counter-select");
     const statusMessage = document.getElementById("status-message");
     const submitButton = document.getElementById("submit-button");
-    let plusKeyActive = false; // For the counter change hotkey
+    const notification = document.getElementById("notification");
+    const notificationText = document.getElementById("notification-text");
+    const recentCallsList = document.getElementById("recent-calls-list");
+    const serverUrlElement = document.getElementById("server-url");
+    
+    let terminalRecentCalls = [];
+    let serverInfo = { ip: '', port: '' };
+    let currentNotificationTimeout = null;
+
+    // Keypad elements
+    const numberInput = document.getElementById("number-input-keypad");
+    const numberDisplay = document.getElementById("number-display");
+    const displayText = document.getElementById("display-text");
+
+    // ENHANCED FLOATING NOTIFICATION SYSTEM
+    function showNotification(message, type = 'info', duration = 4000, autoDismiss = true) {
+        // Clear any existing timeout
+        if (currentNotificationTimeout) {
+            clearTimeout(currentNotificationTimeout);
+            currentNotificationTimeout = null;
+        }
+
+        // Reset classes and set new ones
+        notification.className = `notification ${type}`;
+        notificationText.textContent = message;
+
+        // Show with animation
+        notification.classList.add('show');
+
+        // Set up auto-dismiss if enabled
+        if (autoDismiss && duration > 0) {
+            notification.classList.add('auto-dismiss');
+            notification.style.setProperty('--duration', `${duration}ms`);
+            notification.querySelector('::before')?.style?.setProperty('animation-duration', `${duration}ms`);
+
+            currentNotificationTimeout = setTimeout(() => {
+                hideNotification();
+            }, duration);
+        } else {
+            notification.classList.remove('auto-dismiss');
+        }
+    }
+
+    function hideNotification() {
+        if (currentNotificationTimeout) {
+            clearTimeout(currentNotificationTimeout);
+            currentNotificationTimeout = null;
+        }
+
+        notification.classList.remove('show', 'auto-dismiss');
+        notification.classList.add('hide');
+        
+        setTimeout(() => {
+            notification.classList.remove('hide');
+            notification.style.display = 'none';
+        }, 300);
+    }
+
+    function dismissNotification() {
+        hideNotification();
+    }
+
+    // Replace the old showError and showSuccess functions
+    function showError(message, duration = 5000) {
+        showNotification(message, 'error', duration);
+    }
+
+    function showSuccess(message, duration = 3000) {
+        showNotification(message, 'success', duration);
+    }
+
+    function showInfo(message, duration = 4000) {
+        showNotification(message, 'info', duration);
+    }
+
+    // Get current number value
+    function getCurrentNumber() {
+        return numberInput.value.trim();
+    }
+
+    // Update display
+    function updateDisplay() {
+        const value = numberInput.value;
+        if (value) {
+            displayText.textContent = value;
+            numberDisplay.classList.remove('empty');
+        } else {
+            displayText.textContent = ' ';
+            numberDisplay.classList.add('empty');
+        }
+    }
+
+    // Clear input
+    function clearInput() {
+        numberInput.value = '';
+        updateDisplay();
+    }
+
+    // Backspace
+    function backspaceInput() {
+        numberInput.value = numberInput.value.slice(0, -1);
+        updateDisplay();
+    }
+
+    // Enhanced keypad event handlers
+    function initializeKeypad() {
+        document.querySelectorAll(".key-btn").forEach(key => {
+            const keyVal = key.dataset.key;
+            
+            // Use both touch and click events for better responsiveness
+            key.addEventListener("touchstart", (e) => {
+                e.preventDefault();
+                handleKeyPress(keyVal);
+            }, { passive: false });
+            
+            key.addEventListener("click", (e) => {
+                e.preventDefault();
+                handleKeyPress(keyVal);
+                   });
+            });
+    }
+
+    function handleKeyPress(keyVal) {
+        if (keyVal === "clear") {
+            clearInput();
+        } else if (keyVal === "back") {
+            backspaceInput();
+        } else if (keyVal === "enter") {
+            // Handle enter key - trigger form submission without adding to display
+            handleFormSubmission();
+            
+        } else if (numberInput.value.length < 5) {
+            // Only add numbers to input, not enter
+            numberInput.value += keyVal;
+            updateDisplay();
+        }
+        
+        // Provide haptic feedback on supported devices
+        if (navigator.vibrate) {
+            navigator.vibrate(50);
+        }
+    }
+
+    // Separate function to handle form submission logic
+    function handleFormSubmission() {
+        const number = getCurrentNumber();
+        const counter = counterSelect.value;
+
+        // Validate input before submission
+        if (!validateInput(number, counter)) {
+            return;
+        }
+
+        // Check if submit button is disabled
+        if (submitButton.disabled) {
+            return;
+        }
+
+        // Add to recent calls
+        addToRecentCalls(number, counter);
+
+        // Emit socket event
+        socket.emit("call_number", { number, counter });
+        
+        // Update status message
+        statusMessage.textContent = `Calling ${number} to Kaunter ${counter}`;
+        statusMessage.style.color = "#38a169";
+
+        // Clear input
+        clearInput();
+
+        // Disable submit button temporarily
+        submitButton.disabled = true;
+        setTimeout(() => { 
+            statusMessage.textContent = "";
+            submitButton.disabled = false; 
+        }, 1000);
+    }
+
+    // Get server connection info
+    function getServerInfo() {
+        const protocol = window.location.protocol;
+        const hostname = window.location.hostname;
+        const port = window.location.port || (protocol === 'https:' ? '443' : '80');
+        
+        serverInfo = {
+            protocol: protocol,
+            hostname: hostname,
+            port: port,
+            fullUrl: `${protocol}//${hostname}${port !== '80' && port !== '443' ? ':' + port : ''}`
+        };
+        
+        updateConnectionDisplay();
+        generateQRCode();
+    }
+
+    // Update connection display
+    function updateConnectionDisplay() {
+        serverUrlElement.textContent = serverInfo.fullUrl;
+    }
+
+    // Generate QR code for mobile access
+    function generateQRCode() {
+        const canvas = document.getElementById('qrcode');
+        
+        if (typeof QRCode === 'undefined') {
+            console.warn('QRCode library not loaded, trying again in 500ms...');
+            setTimeout(generateQRCode, 500);
+            return;
+        }
+        
+        QRCode.toCanvas(canvas, serverInfo.fullUrl, {
+            width: 120,
+            margin: 1,
+            color: {
+                dark: '#2d3748',
+                light: '#ffffff'
+            }
+        }, function (error) {
+            if (error) {
+                console.error('QR Code generation failed:', error);
+                canvas.style.display = 'none';
+                const fallbackText = document.createElement('div');
+                fallbackText.style.cssText = 'font-size: 0.8rem; text-align: center; padding: 10px;';
+                fallbackText.textContent = 'QR Code unavailable';
+                canvas.parentNode.appendChild(fallbackText);
+            } else {
+                console.log('QR Code generated successfully');
+            }
+        });
+    }
+
+    // Client-side validation function
+    function validateInput(number, counter) {
+        if (!number || !number.trim()) {
+            showError('Nombor tiket diperlukan');
+            return false;
+        }
+        if (!counter || !counter.trim()) {
+            showError('Sila pilih kaunter');
+            return false;
+        }
+        if (number.length > 5) {
+            showError('Nombor tiket terlalu panjang (maksimum 5 digit)');
+            return false;
+        }
+        if (!/^\d+$/.test(number)) {
+            showError('Nombor tiket hanya boleh mengandungi angka');
+            return false;
+        }
+        return true;
+    }
+
+    // Add call to recent calls list
+    function addToRecentCalls(number, counter) {
+        const timestamp = new Date();
+        const newCall = {
+            number: number,
+            counter: counter,
+            timestamp: timestamp,
+            id: Date.now()
+        };
+
+        terminalRecentCalls.unshift(newCall);
+        terminalRecentCalls = terminalRecentCalls.slice(0, 3);
+        
+        updateRecentCallsDisplay();
+    }
+
+    // Update recent calls display
+    function updateRecentCallsDisplay() {
+        if (terminalRecentCalls.length === 0) {
+            recentCallsList.innerHTML = '<div class="no-recent-calls">No recent calls yet</div>';
+            return;
+        }
+
+        recentCallsList.innerHTML = '';
+        terminalRecentCalls.forEach((call, index) => {
+            const callItem = document.createElement('div');
+            callItem.className = 'recent-call-item';
+            if (index === 0) callItem.classList.add('new');
+            
+            const timeAgo = getTimeAgo(call.timestamp);
+            
+            callItem.innerHTML = `
+                <div class="recent-call-number">${call.number}</div>
+                <div class="recent-call-details">
+                    Kaunter ${call.counter}
+                    <span class="recent-call-time">${timeAgo}</span>
+                </div>
+            `;
+            
+            recentCallsList.appendChild(callItem);
+        });
+    }
+
+    // Get human-readable time difference
+    function getTimeAgo(timestamp) {
+        const now = new Date();
+        const diffMs = now - timestamp;
+        const diffSecs = Math.floor(diffMs / 1000);
+        const diffMins = Math.floor(diffSecs / 60);
+        
+        if (diffSecs < 60) {
+            return 'Just now';
+        } else if (diffMins < 60) {
+            return `${diffMins}m ago`;
+        } else {
+            return timestamp.toLocaleTimeString('en-US', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+    }
+
+    // Update time stamps periodically
+    function updateTimeStamps() {
+        if (terminalRecentCalls.length > 0) {
+            updateRecentCallsDisplay();
+        }
+    }
 
     form.addEventListener("submit", (event) => {
         event.preventDefault();
-        const number = numberInput.value.trim();
-        const counter = counterSelect.value;
-
-        if (number && !isNaN(number)) {
-            socket.emit("call_number", { number, counter });
-            
-            statusMessage.textContent = `Called number ${number} to Counter ${counter}`;
-            statusMessage.style.color = "green";
-            numberInput.value = ""; // Clear input for next call
-
-            submitButton.disabled = true;
-            setTimeout(() => { 
-                statusMessage.textContent = "";
-                submitButton.disabled = false; 
-            }, 1500);
-
-        } else {
-            statusMessage.textContent = "Please enter a valid number.";
-            statusMessage.style.color = "red";
-        }
+        handleFormSubmission();
     });
 
-    // Virtual Keypad function  
-    document.querySelectorAll(".key").forEach(key => {
-        key.addEventListener("click", () => {
-            const keyVal = key.dataset.key;
-            if (keyVal === "clear") {
-                numberInput.value = "";
-            } else if (keyVal === "back") {
-                numberInput.value = numberInput.value.slice(0, -1);
-            } else if (numberInput.value.length < 5) {
-                numberInput.value += keyVal;
-            }
-        });
-    });
-
-    // Advanced Keyboard shortcuts with counter-switching hotkey
+    // Keyboard shortcuts
     document.addEventListener("keydown", function(event) {
-        const isNumpadPlus = event.code === "NumpadAdd" || event.key === '+';
-        const isCounterKey = /^[1-5]$/.test(event.key); // For counters 1-5
-
-        // Hotkey: Press '+' then a number 1-5 to switch the counter
-        if (isNumpadPlus) {
-            plusKeyActive = true;
-            event.preventDefault(); // Prevent '+' from being typed
-            const label = document.querySelector("label[for='counter-select']");
-            label.style.color = "#e67e22"; // Orange to show hotkey is active
-            setTimeout(() => { if (plusKeyActive) label.style.color = ""; }, 1000); // Reset color
-        } 
-        else if (plusKeyActive && isCounterKey) {
-            event.preventDefault(); // Prevent digit from being typed in the number field
-            counterSelect.value = event.key;
-            plusKeyActive = false; // Exit hotkey mode
-            
-            const label = document.querySelector("label[for='counter-select']");
-            label.style.color = "green"; // Green to confirm change
-            setTimeout(() => { label.style.color = ""; }, 500);
-        }
-        // Normal number input
-        else if (event.key >= '0' && event.key <= '9' && numberInput.value.length < 5) {
+        // Number keys
+        if (event.key >= '0' && event.key <= '9' && numberInput.value.length < 5) {
             numberInput.value += event.key;
-            plusKeyActive = false;
+            updateDisplay();
         } 
         // Backspace
         else if (event.key === "Backspace") {
-            numberInput.value = numberInput.value.slice(0, -1);
-            plusKeyActive = false;
+            backspaceInput();
         } 
-        // Enter key submits the form
+        // Enter key submits
         else if (event.key === "Enter") {
             event.preventDefault();
-            if (!submitButton.disabled) {
-                submitButton.click();
-            }
-            plusKeyActive = false;
+            handleFormSubmission();
         }
-        // Any other key resets the hotkey mode
-        else {
-            if (!event.metaKey && !event.ctrlKey) {
-                plusKeyActive = false;
-            }
+        // ESC key dismisses notification
+        else if (event.key === "Escape") {
+            dismissNotification();
+        }
+        // Counter shortcuts (+ followed by number)
+        else if (event.key === '+') {
+            event.preventDefault();
+            const label = document.querySelector("label[for='counter-select']");
+            label.style.color = "#ed8936";
+            setTimeout(() => { label.style.color = ""; }, 1000);
         }
     });
 
-    socket.on("connect", () => { console.log("Connected to server"); });
-</script>
+    // SocketIO Event Handlers
+    socket.on("connect", () => { 
+        console.log("Connected to server");
+        showSuccess("Connected to Server ✅");
+    });
+
+    socket.on("disconnect", () => {
+        console.log("Disconnected from server");
+        showError("Disconnected from server ❌", 8000); // 0 = no auto-dismiss
+    });
+
+    socket.on("error", (data) => {
+        console.error("Server error:", data.message);
+        showError("Server error: " + data.message);
+    });
+
+    socket.on("connect_error", (error) => {
+        console.error("Connection error:", error);
+        showError("Connection error - Please check network", 8000);
+    });
+
+    socket.on("reconnect", (attemptNumber) => {
+        console.log("Reconnected after", attemptNumber, "attempts");
+        showSuccess("Reconnected successfully! 🔄");
+        dismissNotification(); // Dismiss any previous error messages
+    });
+
+    socket.on("reconnecting", (attemptNumber) => {
+        console.log("Reconnection attempt", attemptNumber);
+        showInfo(`Reconnecting... (attempt ${attemptNumber})`, 0);
+    });
+
+    // Wakelock functionality to prevent device sleep
+    let wakeLock = null;
+    let wakeLockSupported = false;
+
+    async function requestWakeLock() {
+        if (!('wakeLock' in navigator)) {
+            console.log('Wake Lock API not supported');
+            return false;
+        }
+
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            wakeLockSupported = true;
+            
+            wakeLock.addEventListener('release', () => {
+                console.log('Wake Lock was released');
+            });
+            
+            console.log('Wake Lock is active - screen will stay on');
+            showSuccess('Screen lock disabled - device will stay awake 📱', 2500);
+            
+            return true;
+        } catch (err) {
+            console.error('Failed to request wake lock:', err);
+            showError(`Wake lock failed: ${err.message}`);
+            return false;
+        }
+    }
+
+    async function releaseWakeLock() {
+        if (wakeLock) {
+            try {
+                await wakeLock.release();
+                wakeLock = null;
+                console.log('Wake Lock released');
+            } catch (err) {
+                console.error('Failed to release wake lock:', err);
+            }
+        }
+    }
+
+    // Re-request wake lock when page becomes visible (handles tab switching)
+    document.addEventListener('visibilitychange', async () => {
+        if (wakeLockSupported && document.visibilityState === 'visible') {
+            await requestWakeLock();
+        }
+    });
+
+    // Initialize everything when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            getServerInfo();
+        }, 100);
+        
+        initializeKeypad();
+        updateDisplay();
+        
+        setInterval(updateTimeStamps, 60000);
+        
+        // Load saved recent calls
+        const savedCalls = localStorage.getItem('terminalRecentCalls');
+        if (savedCalls) {
+            try {
+                const parsed = JSON.parse(savedCalls);
+                terminalRecentCalls = parsed.map(call => ({
+                    ...call,
+                    timestamp: new Date(call.timestamp)
+                })).slice(0, 3);
+                updateRecentCallsDisplay();
+            } catch (e) {
+                console.log('Failed to load saved recent calls');
+            }
+        }
+
+        // Request wake lock after user interaction
+        document.addEventListener('click', requestWakeLock, { once: true });
+        document.addEventListener('touchstart', requestWakeLock, { once: true });
+    });
+
+    // Save recent calls before page unload
+    window.addEventListener('beforeunload', function() {
+        localStorage.setItem('terminalRecentCalls', JSON.stringify(terminalRecentCalls));
+    });
+
+    // Close notification when clicking outside of it (optional)
+    document.addEventListener('click', function(event) {
+        if (!notification.contains(event.target) && notification.classList.contains('show')) {
+            // Only auto-close info notifications, not errors
+            if (notification.classList.contains('info')) {
+                dismissNotification();
+            }
+        }
+    });
+    
+    </script>
 </body>
 </html>
